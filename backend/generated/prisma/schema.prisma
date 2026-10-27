@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String         @id @default(uuid())
+  userName     String         @unique
+  email        String         @unique
+  password     String
+  refreshToken RefreshToken[]
+  createdAt    DateTime       @default(now())
+  updateAt     DateTime       @updatedAt
+}
+
+model RefreshToken {
+  id     String @id @default(uuid())
+  token  String
+  userId String
+
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+}
