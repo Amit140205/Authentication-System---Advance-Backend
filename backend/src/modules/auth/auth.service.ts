@@ -1,9 +1,10 @@
+import { JwtPayload } from "../../types/index.js";
 import { AppError } from "../../utils/AppError.js";
-import { hashPassword } from "../../utils/auth.helper.js";
-import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.helper.js";
+import { comparePassword, hashPassword, hashRefreshToken } from "../../utils/auth.helper.js";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt.helper.js";
 import { toUserResponse } from "./auth.mapper.js";
 import { authRepository } from "./auth.repository.js";
-import { RegisterUserDTO } from "./auth.schema.js";
+import { LoginUserDTO, RefreshTokenDTO, RegisterUserDTO } from "./auth.schema.js";
 
 export const authService = {
     registerUser: async (body: RegisterUserDTO) => {
@@ -28,8 +29,10 @@ export const authService = {
         const accessToken = generateAccessToken(newUser.id);
         const refreshToken = generateRefreshToken(newUser.id);
 
+        const hashedRefreshToken = hashRefreshToken(refreshToken);
+
         await authRepository.createRefreshToken({
-            token: refreshToken,
+            token: hashedRefreshToken,
             userId: newUser.id,
             expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
@@ -38,6 +41,121 @@ export const authService = {
             user: toUserResponse(newUser),
             accessToken,
             refreshToken
+        };
+    },
+
+    loginUser: async (body: LoginUserDTO) => {
+        const { email, password } = body;
+
+        const user = await authRepository.findUserByEmail(email);
+
+        if (!user) {
+            throw new AppError(404, "Invalid credentials");
         }
+
+        const isPassword = await comparePassword(password, user.password);
+
+        if (!isPassword) {
+            throw new AppError(404, "Invalid credentials");
+        }
+
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
+
+        const hashedRefreshToken = hashRefreshToken(refreshToken);
+
+        await authRepository.createRefreshToken({
+            token: hashedRefreshToken,
+            userId: user.id,
+            expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        return {
+            user: toUserResponse(user),
+            accessToken,
+            refreshToken
+        };
+    },
+
+    refreshToken: async (body: RefreshTokenDTO) => {
+        const { token } = body;
+
+        if (!token) {
+            throw new AppError(401, "Refresh token required");
+        }
+
+        let decoded;
+
+        try {
+            decoded = verifyRefreshToken(token) as JwtPayload;
+        } catch {
+            throw new AppError(403, "Invalid or expired refresh token");
+        }
+
+        const hashedRefreshToken = hashRefreshToken(token);
+
+        const existingToken = await authRepository.findRefreshToken(hashedRefreshToken);
+
+        if (!existingToken) {
+            throw new AppError(403, "Refresh token not found");
+        }
+
+        await authRepository.deleteRefreshTokenById(existingToken.id);
+
+        const newAccessToken = generateAccessToken(decoded.userId);
+        const newRefreshToken = generateRefreshToken(decoded.userId);
+
+        const newHashedRefreshToken = hashRefreshToken(newRefreshToken);
+
+        await authRepository.createRefreshToken({
+            token: newHashedRefreshToken,
+            userId: decoded.userId,
+            expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        return {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken
+        };
+    },
+
+    getCurrentUser: async (userId: string) => {
+        const user = await authRepository.findUserById(userId);
+
+        if (!user) {
+            throw new AppError(404, "User not found");
+        }
+
+        return {
+            user: toUserResponse(user)
+        };
+    },
+
+    logout: async (refreshToken: string) => {
+        if (!refreshToken) {
+            throw new AppError(401, "Refresh token required");
+        };
+
+        const hashedRefreshToken = hashRefreshToken(refreshToken);
+
+        const existingToken = await authRepository.findRefreshToken(hashedRefreshToken);
+
+        if (!existingToken) {
+            throw new AppError(404, "Invalid refresh token");
+        }
+
+        await authRepository.deleteRefreshTokenById(existingToken.id);
+
+        return true;
+    },
+
+    logoutAllDevices: async (userId: string) => {
+        if (!userId) {
+            throw new AppError(404, "User id not found");
+        }
+
+        await authRepository.deleteAllRefreshTokenByUserId(userId);
+
+        return true;
     }
 };
