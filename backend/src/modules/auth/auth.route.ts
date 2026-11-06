@@ -3,14 +3,23 @@ import { currentUserController, loginUserController, logoutAllController, logout
 import { validate } from "../../middlewares/validate.middleware.js";
 import { loginUserSchema, refreshTokenSchema, registerUserSchema } from "./auth.schema.js";
 import { verifyUser } from "../../middlewares/auth.middleware.js";
+import { authService } from "./auth.container.js";
 
 const router = express.Router();
+
+// flow
+// router -> controller -> service -> repository (service layer is tightly coupled with repository layer)
+
+// dependency inversion (better approach)
+// router -> controller -> service -> interface <- repository (here service layer and repository layer both
+// independently communicate with interface, loose coupling )
+
 
 router.route("/register").post(validate(registerUserSchema), registerUserController);
 router.route("/login").post(validate(loginUserSchema), loginUserController);
 router.route("/refreshToken").post(validate(refreshTokenSchema), refreshTokenController);
-router.route("/me").get(verifyUser, currentUserController);
-router.route("/logout").post(verifyUser, logoutController);
-router.route("/logout-all-devices").post(verifyUser, logoutAllController);
+router.route("/me").get(verifyUser(authService), currentUserController);
+router.route("/logout").post(verifyUser(authService), logoutController);
+router.route("/logout-all-devices").post(verifyUser(authService), logoutAllController);
 
 export default router;
