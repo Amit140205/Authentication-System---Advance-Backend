@@ -3,11 +3,13 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { FRONTEND_URL } from "./config/config.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
-import authRouter from "./modules/auth/auth.route.js"
+import authRouter from "./modules/auth/auth.route.js";
+import postRouter from "./modules/post/post.route.js";
 
 export const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
     origin: FRONTEND_URL
@@ -20,6 +22,7 @@ app.get("/health-check", (req: Request, res: Response) => {
     });
 });
 
-app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/post", postRouter);
 
-app.use(globalErrorHandler)
+app.use(globalErrorHandler);
