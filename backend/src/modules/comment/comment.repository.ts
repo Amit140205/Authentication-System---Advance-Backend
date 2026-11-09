@@ -1,9 +1,10 @@
+import { Comment } from "../../../generated/prisma/index.js";
 import { prisma } from "../../lib/prisma.js";
-import { ICommentRepository } from "./comment.interface.js";
+import { CommentWithPost, ICommentRepository } from "./comment.interface.js";
 import { CreateCommentDTO } from "./comment.schema.js";
 
 export class CommentRepository implements ICommentRepository {
-    async createComment(postId: string, userId: string, data: CreateCommentDTO): Promise<any> {
+    async createComment(postId: string, userId: string, data: CreateCommentDTO): Promise<Comment> {
         const newComment = await prisma.comment.create({
             data: {
                 comment: data.comment,
@@ -15,7 +16,7 @@ export class CommentRepository implements ICommentRepository {
         return newComment;
     }
 
-    async getCommentById(commentId: string): Promise<any> {
+    async getCommentById(commentId: string): Promise<CommentWithPost | null> {
         const comment = await prisma.comment.findUnique({
             where: {
                 id: commentId
@@ -28,7 +29,7 @@ export class CommentRepository implements ICommentRepository {
         return comment;
     }
 
-    async deleteComment(commentId: string): Promise<any> {
+    async deleteComment(commentId: string): Promise<void> {
         await prisma.comment.delete({
             where: {
                 id: commentId

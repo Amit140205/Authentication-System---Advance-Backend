@@ -1,4 +1,11 @@
+import { Post, Prisma } from "../../../generated/prisma/index.js";
 import { UpdatePostDTO } from "./post.schema.js";
+
+export type PostWithComment = Prisma.PostGetPayload<{
+    include: {
+        comment: true;
+    };
+}>;
 
 export interface IPostRepository {
     createPost(
@@ -6,11 +13,11 @@ export interface IPostRepository {
         description: string,
         userId: string,
         imageUrl?: string,
-    ): Promise<any>;
-    getAllPosts(): Promise<any>;
-    getPostByPostId(post: string): Promise<any>;
-    getPostsByUserId(userId: string): Promise<any>;
-    getPostByPostIdAndUserId(postId: string, userId: string): Promise<any>;
-    updatePost(postId: string, data: UpdatePostDTO): Promise<any>;
-    deletePost(postId: string): Promise<any>;
+    ): Promise<Post>;
+    getAllPosts(): Promise<PostWithComment[]>;
+    getPostByPostId(post: string): Promise<Post | null>;
+    getPostsByUserId(userId: string): Promise<PostWithComment[]>;
+    getPostByPostIdAndUserId(postId: string, userId: string): Promise<Post | null>;
+    updatePost(postId: string, data: UpdatePostDTO): Promise<Post>;
+    deletePost(postId: string): Promise<void>;
 } 

@@ -4,12 +4,13 @@ import { comparePassword, hashPassword, hashRefreshToken } from "../../utils/aut
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt.helper.js";
 import { IAuthRepository } from "./auth.interface.js";
 import { toUserResponse } from "./auth.mapper.js";
+import { AuthResponseDTO, UserResponseDTO } from "./auth.response.js";
 import { LoginUserDTO, RefreshTokenDTO, RegisterUserDTO } from "./auth.schema.js";
 
 export class AuthService {
     constructor(private repo: IAuthRepository) { };
 
-    async registerUser(body: RegisterUserDTO) {
+    async registerUser(body: RegisterUserDTO): Promise<AuthResponseDTO> {
         const { userName, email, password } = body;
 
         const existingUserByUserName = await this.repo.findUserByUserName(userName);
@@ -46,7 +47,7 @@ export class AuthService {
         };
     }
 
-    async loginUser(body: LoginUserDTO) {
+    async loginUser(body: LoginUserDTO): Promise<AuthResponseDTO> {
         const { email, password } = body;
 
         const user = await this.repo.findUserByEmail(email);
@@ -79,7 +80,11 @@ export class AuthService {
         };
     }
 
-    async refreshToken(body: RefreshTokenDTO) {
+    async refreshToken(body: RefreshTokenDTO): Promise<{
+        accessToken: string;
+        refreshToken: string;
+
+    }> {
         const { token } = body;
 
         if (!token) {
@@ -121,7 +126,9 @@ export class AuthService {
         };
     }
 
-    async getCurrentUser(userId: string) {
+    async getCurrentUser(userId: string): Promise<{
+        user: UserResponseDTO
+    }> {
         const user = await this.repo.findUserById(userId);
 
         if (!user) {
@@ -133,7 +140,7 @@ export class AuthService {
         };
     }
 
-    async logout(refreshToken: string) {
+    async logout(refreshToken: string): Promise<void> {
         if (!refreshToken) {
             throw new AppError(401, "Refresh token required");
         };
@@ -147,18 +154,14 @@ export class AuthService {
         }
 
         await this.repo.deleteRefreshTokenById(existingToken.id);
-
-        return true;
     }
 
-    async logoutAllDevices(userId: string) {
+    async logoutAllDevices(userId: string): Promise<void> {
         if (!userId) {
             throw new AppError(404, "User id not found");
         }
 
         await this.repo.deleteAllRefreshTokenByUserId(userId);
-
-        return true;
     }
 }
 

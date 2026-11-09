@@ -1,8 +1,9 @@
 import { prisma } from "../../lib/prisma.js";
 import { IAuthRepository } from "./auth.interface.js";
+import { User, RefreshToken } from "../../../generated/prisma/index.js";
 
 export class AuthRepository implements IAuthRepository {
-    async findUserById(id: string): Promise<any> {
+    async findUserById(id: string): Promise<User | null> {
         return await prisma.user.findUnique({
             where: {
                 id
@@ -10,7 +11,7 @@ export class AuthRepository implements IAuthRepository {
         });
     }
 
-    async findUserByUserName(userName: string): Promise<any> {
+    async findUserByUserName(userName: string): Promise<User | null> {
         const user = await prisma.user.findUnique({
             where: {
                 userName
@@ -20,7 +21,7 @@ export class AuthRepository implements IAuthRepository {
         return user;
     }
 
-    async findUserByEmail(email: string): Promise<any> {
+    async findUserByEmail(email: string): Promise<User | null> {
         const user = await prisma.user.findUnique({
             where: {
                 email
@@ -30,7 +31,7 @@ export class AuthRepository implements IAuthRepository {
         return user;
     }
 
-    async createUser(userName: string, email: string, password: string): Promise<any> {
+    async createUser(userName: string, email: string, password: string): Promise<User> {
         const createdUser = await prisma.user.create({
             data: {
                 userName,
@@ -42,7 +43,7 @@ export class AuthRepository implements IAuthRepository {
         return createdUser;
     }
 
-    async createRefreshToken(data: { token: string; userId: string; expiredAt: Date; }): Promise<any> {
+    async createRefreshToken(data: { token: string; userId: string; expiredAt: Date; }): Promise<RefreshToken> {
         const refreshToken = await prisma.refreshToken.create({
             data,
         });
@@ -50,7 +51,7 @@ export class AuthRepository implements IAuthRepository {
         return refreshToken;
     }
 
-    async findRefreshToken(token: string): Promise<any> {
+    async findRefreshToken(token: string): Promise<RefreshToken | null> {
         const refreshToken = await prisma.refreshToken.findUnique({
             where: {
                 token
@@ -60,16 +61,16 @@ export class AuthRepository implements IAuthRepository {
         return refreshToken;
     }
 
-    async deleteRefreshTokenById(id: string): Promise<any> {
-        return await prisma.refreshToken.delete({
+    async deleteRefreshTokenById(id: string): Promise<void> {
+        await prisma.refreshToken.delete({
             where: {
                 id
             }
         });
     }
 
-    async deleteAllRefreshTokenByUserId(userId: string): Promise<any> {
-        return await prisma.refreshToken.deleteMany({
+    async deleteAllRefreshTokenByUserId(userId: string): Promise<void> {
+        await prisma.refreshToken.deleteMany({
             where: {
                 userId
             }

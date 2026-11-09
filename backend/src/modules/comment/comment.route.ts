@@ -8,13 +8,13 @@ import { createCommentController, deleteCommentController } from "./comment.cont
 const router = express.Router();
 
 router.route("/create/post/:id").post(
-    verifyUser(authService),
+    verifyUser,
     validate(createCommentSchema),
     createCommentController
 );
 
 router.route("/delete/:id").delete(
-    verifyUser(authService),
+    verifyUser,
     deleteCommentController
 )
 

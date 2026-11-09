@@ -4,32 +4,22 @@ import { verifyAccessToken } from "../utils/jwt.helper.js";
 import { JwtPayload } from "../types/index.js";
 import { AuthService } from "../modules/auth/auth.service.js";
 
-export const verifyUser = (authService: AuthService) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+export const verifyUser = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
-            if (!token) {
-                throw new AppError(401, "Unauthorized request");
-            }
-
-            const decoded = verifyAccessToken(token) as JwtPayload;
-
-            // const user = await authRepository.findUserById(decoded.userId);
-            const { user } = await authService.getCurrentUser(decoded.userId);
-
-            if (!user) {
-                throw new AppError(401, "Unauthorized request");
-            }
-
-            req.userId = user.id;
-
-            next();
-        } catch (error) {
-            next(new AppError(401, "Invalid or expired token"));
+        if (!token) {
+            throw new AppError(401, "Unauthorized request");
         }
-    };
 
+        const decoded = verifyAccessToken(token) as JwtPayload;
+
+        req.userId = decoded.userId;
+
+        next();
+    } catch (error) {
+        next(new AppError(401, "Invalid or expired token"));
+    }
 };
 
 // export const verifyUser = async (req: Request, res: Response, next: NextFunction) => {
