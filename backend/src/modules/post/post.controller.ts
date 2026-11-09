@@ -12,3 +12,45 @@ export const createPostController = catchAsync(async (req: Request, res: Respons
         data: result
     });
 });
+
+export const getAllPostsController = catchAsync(async (req: Request, res: Response) => {
+    const result = await postService.getAllPosts();
+
+    sendResponse(res, 200, {
+        success: true,
+        message: "Posts fetched successfully",
+        data: result
+    });
+});
+
+export const getUserPostsController = catchAsync(async (req: Request, res: Response) => {
+    const result = await postService.getUserPosts(req.userId as string);
+
+    sendResponse(res, 200, {
+        success: true,
+        message: "User posts fetched successfully",
+        data: result
+    });
+});
+
+export const updatePostController = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await postService.updatePost(id as string, req.userId as string, req.body);
+
+    sendResponse(res, 200, {
+        success: true,
+        message: "Post updated successfully",
+        data: result
+    });
+});
+
+export const deletePostController = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    await postService.deletePost(id as string, req.userId as string);
+
+    sendResponse(res, 200, {
+        success: true,
+        message: "Post deleted successfully",
+    });
+});
