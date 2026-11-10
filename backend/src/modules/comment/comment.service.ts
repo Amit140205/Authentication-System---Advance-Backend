@@ -1,6 +1,7 @@
 import { AppError } from "../../utils/AppError.js";
 import { IPostRepository } from "../post/post.interface.js";
 import { ICommentRepository } from "./comment.interface.js";
+import { toCommentListResponse } from "./comment.mapper.js";
 import { CreateCommentDTO } from "./comment.schema.js";
 
 export class CommentService {
@@ -15,6 +16,17 @@ export class CommentService {
 
         const newComment = await this.commentRepo.createComment(postId, userId, data);
         return newComment;
+    }
+
+    async getCommentsByPostId(postId: string, limit: number, cursor?: string) {
+        const comments = await this.commentRepo.getCommentsByPostId(postId, limit, cursor);
+
+        return {
+            comments: toCommentListResponse(comments),
+            meta: {
+                nextCursor: comments.length > 0 ? comments[comments.length - 1].id : null
+            }
+        };
     }
 
     async deleteComment(commentId: string, userId: string) {

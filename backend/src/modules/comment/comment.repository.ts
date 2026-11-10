@@ -16,6 +16,22 @@ export class CommentRepository implements ICommentRepository {
         return newComment;
     }
 
+    async getCommentsByPostId(postId: string, limit: number, cursor?: string): Promise<Comment[]> {
+        const comments = await prisma.comment.findMany({
+            where: {
+                postId
+            },
+            take: limit,
+            skip: cursor ? 1 : 0,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
+
+        return comments;
+    }
+
     async getCommentById(commentId: string): Promise<CommentWithPost | null> {
         const comment = await prisma.comment.findUnique({
             where: {

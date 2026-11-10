@@ -2,6 +2,7 @@ import { IFileService } from "../../services/file/file.interface.js";
 import { AppError } from "../../utils/AppError.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../../utils/cloudinary.helper.js";
 import { IPostRepository } from "./post.interface.js";
+import { toPostListResponse } from "./post.mapper.js";
 import { CreatePostDTO, UpdatePostDTO } from "./post.schema.js";
 
 export class PostService {
@@ -20,16 +21,26 @@ export class PostService {
         return createdPost;
     }
 
-    async getAllPosts() {
-        const posts = await this.repo.getAllPosts();
+    async getAllPosts(limit: number, cursor?: string) {
+        const posts = await this.repo.getAllPosts(limit, cursor);
 
-        return posts;
+        return {
+            posts: toPostListResponse(posts),
+            meta: {
+                nextCursor: posts.length > 0 ? posts[posts.length - 1].id : null
+            }
+        };
     }
 
-    async getUserPosts(userId: string) {
-        const posts = await this.repo.getPostsByUserId(userId);
+    async getUserPosts(userId: string, limit: number, cursor?: string) {
+        const posts = await this.repo.getPostsByUserId(userId, limit, cursor);
 
-        return posts;
+        return {
+            posts: toPostListResponse(posts),
+            meta: {
+                nextCursor: posts.length > 0 ? posts[posts.length - 1].id : null
+            }
+        };;
     }
 
     async updatePost(postId: string, userId: string, data: UpdatePostDTO) {

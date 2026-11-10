@@ -3,7 +3,7 @@ import { verifyUser } from "../../middlewares/auth.middleware.js";
 import { authService } from "../auth/auth.container.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { createCommentSchema } from "./comment.schema.js";
-import { createCommentController, deleteCommentController } from "./comment.controller.js";
+import { createCommentController, deleteCommentController, getCommentsByPostIdController } from "./comment.controller.js";
 
 const router = express.Router();
 
@@ -13,9 +13,11 @@ router.route("/create/post/:id").post(
     createCommentController
 );
 
+router.route("/post/:postId").get(verifyUser, getCommentsByPostIdController);
+
 router.route("/delete/:id").delete(
     verifyUser,
     deleteCommentController
-)
+);
 
 export default router;

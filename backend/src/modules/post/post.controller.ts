@@ -14,7 +14,10 @@ export const createPostController = catchAsync(async (req: Request, res: Respons
 });
 
 export const getAllPostsController = catchAsync(async (req: Request, res: Response) => {
-    const result = await postService.getAllPosts();
+    const { limit, cursor } = req.query;
+    const parsedLimit = limit ? parseInt(limit as string) : 10;
+
+    const result = await postService.getAllPosts(parsedLimit, cursor as string);
 
     sendResponse(res, 200, {
         success: true,
@@ -24,7 +27,10 @@ export const getAllPostsController = catchAsync(async (req: Request, res: Respon
 });
 
 export const getUserPostsController = catchAsync(async (req: Request, res: Response) => {
-    const result = await postService.getUserPosts(req.userId as string);
+    const { limit, cursor } = req.query;
+    const parsedLimit = limit ? parseInt(limit as string) : 10;
+
+    const result = await postService.getUserPosts(req.userId as string, parsedLimit, cursor as string);
 
     sendResponse(res, 200, {
         success: true,

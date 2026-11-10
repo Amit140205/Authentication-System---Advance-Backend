@@ -15,6 +15,20 @@ export const createCommentController = catchAsync(async (req: Request, res: Resp
     });
 });
 
+export const getCommentsByPostIdController = catchAsync(async (req: Request, res: Response) => {
+    const { limit, cursor } = req.query;
+    const { postId } = req.params;
+    const parsedLimit = limit ? parseInt(limit as string) : 10;
+
+    const result = await commentService.getCommentsByPostId(postId as string, parsedLimit, cursor as string);
+
+    sendResponse(res, 200, {
+        success: true,
+        message: "Comments fetched successfully",
+        data: result
+    });
+});
+
 export const deleteCommentController = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -23,5 +37,5 @@ export const deleteCommentController = catchAsync(async (req: Request, res: Resp
     sendResponse(res, 200, {
         success: true,
         message: "Comment deleted successfully"
-    })
-})
+    });
+});
